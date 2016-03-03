@@ -19,12 +19,10 @@
 #' Intelligent Systems for Molecular Biology}.
 #' @export
 
-
-#function to find n-, h- and c- regions in signal peptide
 find_nhc <- function(protein, signal = NULL) {
   protein <- toupper(protein)
   if (is.null(signal)) 
-    signal <- attr(protein, "sig")
+    signal <- attr(protein, "signal")
   
   sig <- protein[signal[1]:signal[2]]
   start_c <- length(sig) - 2

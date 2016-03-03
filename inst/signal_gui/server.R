@@ -1,6 +1,7 @@
 library(shiny)
 library(signalHsmm)
-library(shinyAce)
+library(DT)
+library(rmarkdown)
 options(shiny.maxRequestSize=10*1024^2)
 
 
@@ -43,12 +44,16 @@ shinyServer(function(input, output) {
   })
   
   
-  output$pred_table <- renderTable({
-    pred2df(prediction())
+  output$pred_table <- DT::renderDataTable({
+    dat <- pred2df(prediction())
+    dat <- cbind(rownames(dat), dat)
+    colnames(dat) <- c("Protein name", "Signal peptide probability", 
+                       "Signal peptide detected", "SP start", "SP end")
+    datatable(dat, rownames = FALSE)
   })
   
   output$summary <- renderPrint({
-    summary(prediction())
+    datatable(summary(prediction()))
   })
   
   
@@ -77,7 +82,11 @@ shinyServer(function(input, output) {
   output$dynamic_tabset <- renderUI({
     if(is.null(prediction())) {
       
-      tabPanel("Paste sequences here:", aceEditor("text_area", value="", height = 150),
+      tabPanel(title = "Sequence input",
+               h3("Paste sequences (FASTA format required) into the field below:"), 
+               tags$style(type="text/css", "textarea {width:100%}"),
+               tags$textarea(id = "text_area", rows = 22, cols = 60, ""),
+               p(""),
                actionButton("use_area", "Submit data from field above"),
                p(""),
                fileInput('seq_file', 'Submit .fasta or .txt file:'))
@@ -86,7 +95,7 @@ shinyServer(function(input, output) {
     } else {
       tabsetPanel(
         tabPanel("Input summary", verbatimTextOutput("summary")),
-        tabPanel("Short output", tableOutput("pred_table")),
+        tabPanel("Short output", DT::dataTableOutput("pred_table")),
         tabPanel("Long output (with graphics)", uiOutput("pred_long"))
       )
     }
@@ -135,9 +144,18 @@ shinyServer(function(input, output) {
       paste0(file_name(), "_pred.html") 
     },
     content <- function(file) {
-      knitr:::knit(input = "signalhsmm_report.Rmd", 
-                   output = "signalhsmm_report.md", quiet = TRUE)
-      markdown:::markdownToHTML("signalhsmm_report.md", file)
+      src <- normalizePath("signalhsmm_report.Rmd")
+      
+      # temporarily switch to the temp dir, in case you do not have write
+      # permission to the current working directory
+      owd <- setwd(tempdir())
+      on.exit(setwd(owd))
+      file.copy(src, "signalhsmm_report.Rmd")
+#       knitr:::knit(input = "signalhsmm_report.Rmd", 
+#                    output = "signalhsmm_report.md", quiet = TRUE)
+#       markdown:::markdownToHTML("signalhsmm_report.md", file)
+      out <- render("signalhsmm_report.Rmd", output_format = "html_document", file, quiet = TRUE)
+      file.rename(out, file)
     }
   )
 })

@@ -1,4 +1,8 @@
-<img src="https://github.com/michbur/signalHsmm/blob/master/inst/logo.png" alt="signalHsmm" style="height: 200px;"/>
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/signalHsmm)](http://cran.r-project.org/package=signalHsmm)
+[![Downloads](http://cranlogs.r-pkg.org/badges/signalHsmm)](http://cran.rstudio.com/package=signalHsmm)
+[![Build Status](https://api.travis-ci.org/michbur/signalHsmm.png)](https://travis-ci.org/michbur/signalHsmm)
+
+<img src="https://github.com/michbur/signalHsmm/blob/master/inst/signal_gui/logo.png" alt="signalHsmm" style="height: 200px;"/>
 
 Predict Presence of Signal Peptides
 -------------------------

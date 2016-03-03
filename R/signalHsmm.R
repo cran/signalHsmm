@@ -11,11 +11,13 @@
 #' For example, artifically introduced bacterial signal peptides can guide proteins in 
 #' mammals and plants. 
 #' 
+#' The development of signalHsmm was funded by National Science Center 
+#' (2015/17/N/NZ2/01845).
+#' 
 #' @description Using hidden semi-Markov models as a probabilistic framework, signalHsmm 
 #' is new, highly accurate signal peptide predictor for eukaryotic proteins. 
 #' @importFrom seqinr read.fasta a
 #' @importFrom shiny runApp
-#' @importFrom biogram degenerate
 #' @importFrom utils tail
 #' @importFrom stats sd median na.omit
 #' @importFrom graphics plot axis text lines legend 
