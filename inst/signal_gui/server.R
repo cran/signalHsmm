@@ -2,9 +2,17 @@ library(shiny)
 library(signalHsmm)
 library(DT)
 library(rmarkdown)
+
 options(shiny.maxRequestSize=10*1024^2)
 
+options(DT.options = list(dom = "Brtip",
+                          buttons = c("copy", "csv", "excel", "print"),
+                          pageLength = 50
+))
 
+my_DT <- function(x, ...)
+  datatable(x, ..., escape = FALSE, extensions = 'Buttons', filter = "top", rownames = FALSE,
+            style = "bootstrap")
 
 shinyServer(function(input, output) {
   
@@ -34,22 +42,22 @@ shinyServer(function(input, output) {
   
   output$dynamic_ui <- renderUI({
     if(!is.null(prediction())) {
-      div(tags$h3("Download results"),
+      tags$p(HTML("<h3><A HREF=\"javascript:history.go(0)\">Start a new query</A></h3>"))
+    } else {
+      div(tags$h3("Example proteins:"),
           tags$p(""),
-          downloadButton("download_short", "Download short output"),
-          downloadButton("download_long", "Download long output (without graphics)"),
-          downloadButton("download_long_graph", "Download long output (with graphics)"),
-          tags$p("Refresh page (press F5) to start a new query with signalHsmm."))
+          pre(includeText("prots.txt")))
     }
   })
   
   
   output$pred_table <- DT::renderDataTable({
+    
     dat <- pred2df(prediction())
     dat <- cbind(rownames(dat), dat)
     colnames(dat) <- c("Protein name", "Signal peptide probability", 
                        "Signal peptide detected", "SP start", "SP end")
-    datatable(dat, rownames = FALSE)
+    my_DT(dat)
   })
   
   output$summary <- renderPrint({
@@ -59,9 +67,11 @@ shinyServer(function(input, output) {
   
   output$long_preds <- renderUI({
     long_preds_list <- lapply(1L:length(prediction()), function(i) {
-      list(plotOutput(paste0("plot", i)), verbatimTextOutput(paste0("summ", i)))
-    })
-    do.call(tagList, unlist(long_preds_list, recursive = FALSE))
+                           list(plotOutput(paste0("plot", i)), verbatimTextOutput(paste0("summ", i)))
+                         })
+  c(list(downloadButton("download_long", "Download long output (without graphics)"),
+         downloadButton("download_long_graph", "Download long output (with graphics)")),
+    do.call(tagList, unlist(long_preds_list, recursive = FALSE)))
   })
   
   
@@ -111,16 +121,6 @@ shinyServer(function(input, output) {
     part_name
   })
   
-  
-  output$download_short <- downloadHandler(
-    filename  = function() { 
-      paste0(file_name(), "_pred.csv") 
-    },
-    content <- function(file) {
-      write.csv(pred2df(prediction()), file)
-    }
-  )
-  
   output$download_long <- downloadHandler(
     filename  = function() { 
       paste0(file_name(), "_pred.txt") 
@@ -151,9 +151,9 @@ shinyServer(function(input, output) {
       owd <- setwd(tempdir())
       on.exit(setwd(owd))
       file.copy(src, "signalhsmm_report.Rmd")
-#       knitr:::knit(input = "signalhsmm_report.Rmd", 
-#                    output = "signalhsmm_report.md", quiet = TRUE)
-#       markdown:::markdownToHTML("signalhsmm_report.md", file)
+      #       knitr:::knit(input = "signalhsmm_report.Rmd", 
+      #                    output = "signalhsmm_report.md", quiet = TRUE)
+      #       markdown:::markdownToHTML("signalhsmm_report.md", file)
       out <- render("signalhsmm_report.Rmd", output_format = "html_document", file, quiet = TRUE)
       file.rename(out, file)
     }
